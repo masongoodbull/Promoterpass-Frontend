@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redeem Your Pitcher</title>
+  <script type="module">
+    // Import Firebase v9 modular SDK
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+    import { getFirestore, collection, query, where, getDocs, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRPqNmhMbyS4IFkkO6ZfUJVHCb7h4E64Y",
+      authDomain: "promoterpass-ea092.firebaseapp.com",
+      projectId: "promoterpass-ea092",
+      storageBucket: "promoterpass-ea092.firebasestorage.app",
+      messagingSenderId: "324225838474",
+      appId: "1:324225838474:web:e86971349a98c5ce51ac73",
+      measurementId: "G-XLKY1XCXD4"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // DOM elements
+    const statusDiv = document.getElementById('status');
+    const redeemBtn = document.getElementById('redeemBtn');
+
+    // Get code from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (!code) {
+      statusDiv.innerHTML = "Invalid redemption link.<br><small>To test: add <code>?code=test123</code> to the URL</small>";
+    } else {
+      // Query Firestore for redemption code
+      const redemptionsRef = collection(db, "redemptions");
+      const q = query(redemptionsRef, where("code", "==", code));
+      
+      getDocs(q).then(snapshot => {
+        if (snapshot.empty) {
+          statusDiv.textContent = "This code does not exist.";
+          return;
+        }
+
+        const redemptionDoc = snapshot.docs[0];
+        const data = redemptionDoc.data();
+
+        if (data.redeemed) {
+          statusDiv.textContent = "✅ Already Redeemed";
+        } else {
+          statusDiv.textContent = "You have a free pitcher waiting!";
+          redeemBtn.style.display = "inline-block";
+
+          redeemBtn.addEventListener("click", async () => {
+            const confirmRedeem = confirm("Are you sure you want to redeem?");
+            if (!confirmRedeem) return;
+
+            try {
+              await updateDoc(doc(db, "redemptions", redemptionDoc.id), { redeemed: true });
+              statusDiv.textContent = "✅ Successfully Redeemed!";
+              redeemBtn.disabled = true;
+              redeemBtn.textContent = "Redeemed ✅";
+            } catch (error) {
+              console.error("Error updating document:", error);
+              statusDiv.textContent = "Error processing redemption.";
+            }
+          });
+        }
+      }).catch(error => {
+        console.error("Error accessing Firestore:", error);
+        statusDiv.textContent = "Error loading redemption data.";
+      });
+    }
+  </script>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    button { font-size: 20px; padding: 10px 30px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h1>🍻 Free Pitcher Redemption</h1>
+  <div id="status">Loading...</div>
+  <button id="redeemBtn" style="display:none;">Redeem Free Pitcher</button>
+
+  
+</body>
+</html>
+
