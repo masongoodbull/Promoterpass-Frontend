@@ -84,7 +84,7 @@
       if (!phoneInput) return (responseDiv.textContent = "⚠️ Please enter a number.");
 
       try {
-        const res = await fetch('https://promoterpass-invite.onrender.com/send-invite', {
+        const res = await fetch('https://promoterpass-backend.onrender.com', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: phoneInput })
