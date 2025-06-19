@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Redeem Your Pitcher</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    button { font-size: 20px; padding: 10px 30px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h1>🍻 Free Pitcher Redemption</h1>
+  <div id="status">Loading...</div>
+  <button id="redeemBtn" style="display:none;">Redeem Free Pitcher</button>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      doc,
+      updateDoc
+    } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRPqNmhMbyS4IFkkO6ZfUJVHCb7h4E64Y",
+      authDomain: "promoterpass-ea092.firebaseapp.com",
+      projectId: "promoterpass-ea092"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const statusDiv = document.getElementById('status');
+    const redeemBtn = document.getElementById('redeemBtn');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (!code) {
+      statusDiv.innerHTML = "Invalid redemption link.<br><small>Add <code>?code=test123</code> to test.</small>";
+    } else {
+      const redemptionsRef = collection(db, "redemptions");
+      const q = query(redemptionsRef, where("code", "==", code));
+
+      getDocs(q).then(snapshot => {
+        if (snapshot.empty) {
+          statusDiv.textContent = "❌ Code not found.";
+          return;
+        }
+
+        const redemptionDoc = snapshot.docs[0];
+        const data = redemptionDoc.data();
+
+        if (data.redeemed) {
+          statusDiv.textContent = "✅ Already Redeemed";
+        } else {
+          statusDiv.textContent = "🎉 You have a free pitcher!";
+          redeemBtn.style.display = "inline-block";
+
+          redeemBtn.addEventListener("click", async () => {
+            const confirmRedeem = confirm("Are you sure you want to redeem?");
+            if (!confirmRedeem) return;
+
+            try {
+              await updateDoc(doc(db, "redemptions", redemptionDoc.id), { redeemed: true });
+              statusDiv.textContent = "✅ Successfully Redeemed!";
+              redeemBtn.disabled = true;
+              redeemBtn.textContent = "Redeemed ✅";
+            } catch (err) {
+              console.error("Redemption failed", err);
+              statusDiv.textContent = "❌ Redemption failed.";
+            }
+          });
+        }
+      });
+    }
+  </script>
+</body>
+</html>

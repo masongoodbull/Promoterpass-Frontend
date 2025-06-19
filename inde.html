@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>🍻 Get Your Free Pitcher</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    input, button {
+      font-size: 18px;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    #response { margin-top: 10px; color: green; }
+  </style>
+</head>
+<body>
+  <h1>🍻 Sign Up for a Free Pitcher</h1>
+  <input id="phoneInput" type="text" placeholder="Enter your phone number" />
+  <button onclick="sendInvite()">Send Invite</button>
+  <div id="response"></div>
+
+  <script>
+    async function sendInvite() {
+      const phone = document.getElementById('phoneInput').value;
+      const responseDiv = document.getElementById('response');
+
+      if (!phone) return (responseDiv.textContent = "⚠️ Please enter a number.");
+
+      try {
+        const res = await fetch('https://your-backend-render-url.com/send-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone })
+        });
+
+        const data = await res.json();
+        responseDiv.textContent = data.success
+          ? '📲 Invite sent successfully!'
+          : '❌ Failed to send invite.';
+      } catch (err) {
+        console.error(err);
+        responseDiv.textContent = "❌ Error sending invite.";
+      }
+    }
+  </script>
+</body>
+</html>
