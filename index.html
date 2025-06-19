@@ -1,11 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Redeem Your Pitcher</title>
   <script type="module">
-    // Import Firebase v9 modular SDK
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-    import { getFirestore, collection, query, where, getDocs, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      doc,
+      updateDoc
+    } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
     // Firebase config
     const firebaseConfig = {
@@ -18,25 +26,21 @@
       measurementId: "G-XLKY1XCXD4"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // DOM elements
     const statusDiv = document.getElementById('status');
     const redeemBtn = document.getElementById('redeemBtn');
 
-    // Get code from URL
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
 
     if (!code) {
       statusDiv.innerHTML = "Invalid redemption link.<br><small>To test: add <code>?code=test123</code> to the URL</small>";
     } else {
-      // Query Firestore for redemption code
       const redemptionsRef = collection(db, "redemptions");
       const q = query(redemptionsRef, where("code", "==", code));
-      
+
       getDocs(q).then(snapshot => {
         if (snapshot.empty) {
           statusDiv.textContent = "This code does not exist.";
@@ -72,18 +76,19 @@
         statusDiv.textContent = "Error loading redemption data.";
       });
     }
-  </script>
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 50px; }
-    button { font-size: 20px; padding: 10px 30px; border-radius: 10px; }
-  </style>
-</head>
-<body>
-  <h1>🍻 Free Pitcher Redemption</h1>
-  <div id="status">Loading...</div>
-  <button id="redeemBtn" style="display:none;">Redeem Free Pitcher</button>
 
-  
-</body>
-</html>
+    // Phone opt-in logic
+    window.sendInvite = async function () {
+      const phoneInput = document.getElementById('phoneInput').value;
+      const responseDiv = document.getElementById('response');
+      if (!phoneInput) return (responseDiv.textContent = "⚠️ Please enter a number.");
 
+      try {
+        const res = await fetch('https://promoterpass-invite.onrender.com/send-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: phoneInput })
+        });
+
+        const data = await res.json();
+        responseDiv.textConten
